@@ -18,6 +18,7 @@ files_url = "https://drive.google.com/uc?id="
 folder_type = "application/vnd.google-apps.folder"
 
 string_regex = re.compile(r"'((?:[^'\\]|\\.)*)'")
+folder_name_regex = re.compile(r'^[^ ]+')
 
 
 def get_folder_list(folder, quiet=False, use_cookies=True):
@@ -80,7 +81,12 @@ def get_folder_list(folder, quiet=False, use_cookies=True):
 
     folder_contents = [] if folder_arr[0] is None else folder_arr[0]
 
-    folder_list["file_name"] = folder_soup.title.contents[0][:-15]
+    title = folder_soup.title.contents[0]
+    match = folder_name_regex.match(title)
+    if not match:
+        raise ValueError('Folder name not parsed out in {title}')
+
+    folder_list["file_name"] = match.group(0)
     folder_list["file_id"] = folder[39:]
     folder_list["file_type"] = folder_type
     folder_list["file_contents"] = []
@@ -122,6 +128,7 @@ def get_folder_list(folder, quiet=False, use_cookies=True):
             if not return_code:
                 return return_code, None
             folder_list["file_contents"].append(folder_structure)
+
     return return_code, folder_list
 
 
